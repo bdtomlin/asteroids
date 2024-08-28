@@ -1,6 +1,13 @@
 import pygame
+from constants import (
+    PLAYER_RADIUS,
+    PLAYER_SHOOT_SPEED,
+    PLAYER_SPEED,
+    PLAYER_TURN_SPEED,
+    PLAYER_SHOOT_COOLDOWN,
+)
 from circleshape import CircleShape
-from constants import PLAYER_RADIUS, PLAYER_SPEED, PLAYER_TURN_SPEED
+from shot import Shot
 
 
 class Player(CircleShape):
@@ -8,6 +15,7 @@ class Player(CircleShape):
         super().__init__(x, y, PLAYER_RADIUS)
         self.position = pygame.Vector2(x, y)
         self.rotation = 0
+        self.shot_timer = 0
 
     def draw(self, screen):
         pygame.draw.polygon(screen, "white", self.triangle(), 2)
@@ -19,11 +27,21 @@ class Player(CircleShape):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
         self.position += forward * PLAYER_SPEED * dt
 
+    def shoot(self):
+        if self.shot_timer > 0:
+            return
+        self.shot_timer = PLAYER_SHOOT_COOLDOWN
+
+        shot = Shot(self.position.x, self.position.y)
+        forward = pygame.Vector2(0, 1).rotate(self.rotation)
+        shot.velocity = forward * PLAYER_SHOOT_SPEED
+
     def update(self, dt):
         keys = pygame.key.get_pressed()
+        self.shot_timer -= dt
 
         # my keyboard shortcuts don't work well
-        # with the ones in the tutorial
+        # with the key codes in the tutorial
         if keys[pygame.K_u]:
             self.rotate(-dt)
         if keys[pygame.K_o]:
@@ -32,6 +50,8 @@ class Player(CircleShape):
             self.move(dt)
         if keys[pygame.K_i]:
             self.move(-dt)
+        if keys[pygame.K_f]:
+            self.shoot()
 
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
